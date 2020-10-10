@@ -6,68 +6,67 @@ white = (255,255,255)
 black = (0,0,0)
 red = (255,0,0)
 
-window_w = 600
-window_h = 350
+window_w = 1000
+window_h = 1000
 block = 5
 
+cols = int(window_w/block)
+rows = int(window_h/block)
 
+positions = [[False for col in range(cols)] for row in range(rows)]
 
+start = [0, random.choice(range(0,rows))]
+start1 = [0, start[1]+1]
 
-start = [0,random.choice(range(block,(window_h-block), block))]
-start1 = [start[0]+block, start[1]]
-
-end = [0, start[1]]
-
-possible = []
-
-maze = [start1]
+positions[start[0]][start[1]] = True
+positions[start1[0]][start1[1]] = True
 
 randompool = [start1]
 
 
-def make_list():
-    for x in range(block,(window_h-block),block):
-        for y in range(block,(window_w-block),block):
-            possible.append([x,y])
+possible = []
+
+end = [0, start[1]]
+
+
 
 def make_maze():
-
+    e = 0
     while len(randompool)>0:
-        print_maze()
         add(random.choice(randompool))
+        if (e % 200 == 0):
+            print_maze()
+        
+        e+=1
 
 def add(position):
-    up = [(position[0]),(position[1]-block)]
-    down = [(position[0]),(position[1]+block)]
-    left = [(position[0]-block),(position[1])]
-    right = [(position[0]+block),(position[1])]
+    up = [position[0],position[1]-1]
+    down = [position[0],position[1]+1]
+    left = [position[0]-1,position[1]]
+    right = [position[0]+1,position[1]]
 
-    neighbour=[]
-
-    if up in maze:
+    if occupied(up):
         neighbour=up
-    elif down in maze:
+    elif occupied(down):
         neighbour=down
-    elif left in maze:
+    elif occupied(left):
         neighbour=left
-    elif right in maze:
+    elif occupied(right):
         neighbour=right
+        
     branches = random.choice([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,3,3])
 
     possiblenexts=[up,down,left,right]
 
     validnexts = []
     for i in possiblenexts:
-        if valid(i,neighbour)==True:
+        if valid(i,neighbour):
             validnexts.append(i)
-
-
-    n=20
 
     while branches > 0 and len(validnexts) > 0:
         next_block=random.choice(validnexts)
 
-        maze.append(next_block)
+        positions[next_block[0]][next_block[1]] = True
 
         randompool.append(next_block)
 
@@ -77,53 +76,55 @@ def add(position):
 
     randompool.remove(position)
 
+def occupied(position):
+    print(position)
+    return position[0] < 0 or position[0] >= rows or position[1] < 0 or position[1] >= cols or positions[position[0]][position[1]]
 
 def valid(position,neighbour):
-    up = [(position[0]),(position[1]-block)]
-    down = [(position[0]),(position[1]+block)]
-    left = [(position[0]-block),(position[1])]
-    right = [(position[0]+block),(position[1])]
-    upleft = [(position[0]-block),(position[1]-block)]
-    upright = [(position[0]+block),(position[1]-block)]
-    downleft = [(position[0]-block),(position[1]+block)]
-    downright = [(position[0]+block),(position[1]+block)]
+    up = [(position[0]),(position[1]-1)]
+    down = [(position[0]),(position[1]+1)]
+    left = [(position[0]-1),(position[1])]
+    right = [(position[0]+1),(position[1])]
+    upleft = [(position[0]-1),(position[1]-1)]
+    upright = [(position[0]+1),(position[1]-1)]
+    downleft = [(position[0]-1),(position[1]+1)]
+    downright = [(position[0]+1),(position[1]+1)]
 
-    if position[0]<block or position[0]>=window_w-block or \
-       position[1]<block or position[1]>=window_h-block:
+    if  position[0]<0 or position[0]>=rows or position[1]<0 or position[1]>=cols:
         return False
 
     n=0
-    if up in maze:
+    if occupied(up):
         n+=1
-    if down in maze:
+    if occupied(down):
         n+=1
-    if left in maze:
+    if occupied(left):
         n+=1
-    if right in maze:
+    if occupied(right):
         n+=1
 
     if n>1:
         return False
-    if upleft in maze and upleft !=neighbour:
+    if occupied(upleft) and upleft != neighbour:
         return False
-    if upright in maze and upright !=neighbour:
+    if occupied(upright) and upright != neighbour:
         return False
-    if downleft in maze and downleft !=neighbour:
+    if occupied(downleft) and downleft != neighbour:
         return False
-    if downright in maze and downright !=neighbour:
+    if occupied(downright) and downright != neighbour:
         return False
 
-    else:
-
-        return True
+    return True
 
 def print_maze():
     gameDisplay.fill(black)
 
-    pygame.draw.rect(gameDisplay, red, [start[0], start[1], block, block])
+    pygame.draw.rect(gameDisplay, red, [start[0]*block, start[1]*block, block, block])
 
-    for position in maze:
-        pygame.draw.rect(gameDisplay, white, [position[0], position[1], block, block])
+    for i in range(len(positions)):
+        for j in range(len(positions[i])):
+            if positions[i][j]:
+                pygame.draw.rect(gameDisplay, white, [i*block, j*block, block, block])
 
     pygame.draw.rect(gameDisplay, red, [end[0], end[1], block, block])
     pygame.display.update()
@@ -142,11 +143,8 @@ gameExit = False
 gameDisplay = pygame.display.set_mode((window_w,window_h))
 pygame.display.set_caption('Maze Generator')
 
-make_list()
 make_maze()
 
-
-generate_end()
 print_maze()
 
 print('Press q to quit')
@@ -154,9 +152,8 @@ gameExit = False
 while gameExit == False:
 
     for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        gameExit = True
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            gameExit = True
 
 pygame.quit()
 quit()
