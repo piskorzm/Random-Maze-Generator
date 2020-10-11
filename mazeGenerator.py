@@ -6,35 +6,30 @@ white = (255,255,255)
 black = (0,0,0)
 red = (255,0,0)
 
-window_w = 1000
+window_w = 2000
 window_h = 1000
-block = 5
+block = 4
 
-cols = int(window_w/block)
-rows = int(window_h/block)
+rows = int(window_w/block)
+cols = int(window_h/block)
 
 positions = [[False for col in range(cols)] for row in range(rows)]
 
-start = [0, random.choice(range(0,rows))]
-start1 = [0, start[1]+1]
+start = [0, random.choice(range(cols-1))]
+start1 = [1, start[1]]
+
+end = [rows-1,0]
 
 positions[start[0]][start[1]] = True
 positions[start1[0]][start1[1]] = True
 
 randompool = [start1]
 
-
-possible = []
-
-end = [0, start[1]]
-
-
-
 def make_maze():
     e = 0
     while len(randompool)>0:
         add(random.choice(randompool))
-        if (e % 200 == 0):
+        if (e % 500 == 0):
             print_maze()
         
         e+=1
@@ -77,7 +72,6 @@ def add(position):
     randompool.remove(position)
 
 def occupied(position):
-    print(position)
     return position[0] < 0 or position[0] >= rows or position[1] < 0 or position[1] >= cols or positions[position[0]][position[1]]
 
 def valid(position,neighbour):
@@ -119,23 +113,25 @@ def valid(position,neighbour):
 def print_maze():
     gameDisplay.fill(black)
 
-    pygame.draw.rect(gameDisplay, red, [start[0]*block, start[1]*block, block, block])
-
-    for i in range(len(positions)):
-        for j in range(len(positions[i])):
+    for i in range(rows):
+        for j in range(cols):
             if positions[i][j]:
                 pygame.draw.rect(gameDisplay, white, [i*block, j*block, block, block])
 
-    pygame.draw.rect(gameDisplay, red, [end[0], end[1], block, block])
+    pygame.draw.rect(gameDisplay, red, [start[0]*block, start[1]*block, block, block])
+    pygame.draw.rect(gameDisplay, red, [end[0]*block, end[1]*block, block, block])
     pygame.display.update()
 
 def generate_end():
-    global end
+    while(end[1] == 0):
+        random_col = random.choice(range(cols-1))
+        end[1] = random_col
 
-    for position in maze:
-
-        if position[0] >= end[0]:
-            end = [position[0] + block, position[1]]
+        if (not occupied([end[0]-1, end[1]])):
+            end[1] = 0
+        else:
+            positions[end[0]][end[1]] == True
+    
 
 
 gameExit = False
@@ -145,6 +141,7 @@ pygame.display.set_caption('Maze Generator')
 
 make_maze()
 
+generate_end()
 print_maze()
 
 print('Press q to quit')
